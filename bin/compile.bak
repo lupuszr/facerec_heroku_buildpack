@@ -1,0 +1,57 @@
+build_pack_path=$(cd $(dirname $(dirname $0)); pwd)
+
+# Ensure dirs are present
+mkdir -p $1 $2 $3
+
+build_path=$(cd $1 && pwd)
+cache_path=$(cd $2 && pwd)
+env_path=$(cd $3 && pwd)
+
+function xlib_tarball() {
+  echo "libx11_1.6.2.orig.tar.gz"
+}
+
+function download_xlib() {
+  xlib_package_url="http://archive.ubuntu.com/ubuntu/pool/main/libx/libx11/libx11_1.6.2.orig.tar.gz"
+  curl -S ${xlib_package_url}
+}
+
+function xlib_build_path() {
+  echo "${cache_path}/xlib"
+}
+
+function platform_tools_path() {
+  echo "${build_path}/.platform_tools"
+}
+
+function xlib_path() {
+  echo "$(platform_tools_path)/xlib"
+}
+
+function runtime_platform_tools_path() {
+  echo "${runtime_path}/.platform_tools"
+}
+
+function runtime_xlib_path() {
+  echo "$(runtime_platform_tools_path)/xlib"
+}
+
+function install_xlib() {
+  output_section "Installing xlib"
+
+  rm -rf $(xlib_build_path)
+  mkdir -p $(xlib_build_path)
+  tar zxf ${cache_path}/$(xlib_tarball) -C $(xlib_build_path) --strip-components=1
+
+  rm -rf $(runtime_erlang_path)
+  mkdir -p $(runtime_platform_tools_path)
+  ln -s $(xlib_build_path) $(runtime_xlib_path)
+  $(xlib_build_path)/Install -minimal $(runtime_xlib_path)
+
+  cp -R $(xlib_build_path) $(xlib_path)
+  PATH=$(xlib_path)/bin:$PATH
+}
+
+mkdir $(platform_tools_path)
+download_xlib
+install_xlib

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "NodeJs + libx11-dev + libpng-dev"
+exit 0
